@@ -1,0 +1,171 @@
+input
+
+{_____________________CONTROLES DA ESTRATÉGIA___________________________}
+
+  { NOME: MACD  SECRETO}
+
+  {-- ATENÇÃO: As configurações abaixo caracterizam o setup MACD envenenado. Qualquer
+
+   alteração desmonta a estratégia padrão --}
+
+  // LADO DAS OPERAÇÕES
+
+  operar_comprado(verdadeiro);
+
+  operar_vendido(falso);                                             
+
+  // CONFIGURAÇÕES DO INDICADOR MACD 
+
+  Macd_media_Longa(20);
+
+  Macd_media_curta(10);  
+
+  sinal_Macd(9);                                                           
+
+  média_que_cruza_com_MACD(12);
+
+  tipo_da_média(0); { 0 = aritmética, 1 = exponencial }
+
+  // CONFIGURAÇÕES DO INDICADOR ESTOCÁSTICO LENTO
+
+  periodo_estocatisco(5);
+
+  linha_inferior(50);
+
+  linha_superior(70);
+
+  // DETALHES DO BACKTEST
+
+  ano_de_início(2000);
+
+  ano_do_fim(2020);
+
+  {_____________________________________________________________________}
+
+  // ÁREA DO CÓDIGO - QUALQUER ALTERAÇÃO ERRADA PODE
+
+  // INTERFERIR NO FUNCIONAMENTO DA ESTRATÉGIA 
+
+begin
+
+  if (BuyPosition = 1) and (tipo_da_média=0) then
+
+    begin
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)<
+
+      media(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)>linha_superior)
+
+      then SellToCoverAtMarket;                                                                 
+
+    end;
+
+  if (BuyPosition = 1) and (tipo_da_média=1) then
+
+    begin
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)<
+
+      mediaExp(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)>linha_superior)
+
+      then SellToCoverAtMarket;                                                                 
+
+    end;
+
+  if (SellPosition = 1) and (tipo_da_média=0) then
+
+    begin
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)>
+
+      media(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)<linha_inferior)
+
+      then BuyToCoverAtMarket;
+
+    end;
+
+  if (SellPosition = 1) and (tipo_da_média=1) then
+
+    begin
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)>
+
+      mediaExp(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)<linha_inferior)
+
+      then BuyToCoverAtMarket;
+
+    end;
+
+  if (BuyPosition=0) and (SellPosition=0) and (year(date)>=ano_de_inicio) 
+
+  and (year(date)<=ano_do_fim+1) and (tipo_da_média=0) then
+
+    begin
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)>
+
+      media(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)<linha_inferior) 
+
+      and (operar_comprado=true)
+
+      then BuyAtMarket;
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)<
+
+      media(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)>linha_superior) 
+
+      and (operar_vendido=true)
+
+      then SellShortAtMarket;                         
+
+    end;
+
+  if (BuyPosition=0) and (SellPosition=0) and (year(date)>=ano_de_inicio) 
+
+  and (year(date)<=ano_do_fim+1) and (tipo_da_média=1) then
+
+    begin
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)>
+
+      mediaExp(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)<linha_inferior) 
+
+      and (operar_comprado=true)
+
+      then BuyAtMarket;
+
+      if (MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)<
+
+      mediaExp(média_que_cruza_com_MACD, MACD(Macd_media_Longa,Macd_media_curta, sinal_Macd)))
+
+      and (SlowStochastic(periodo_estocatisco)>linha_superior) 
+
+      and (operar_vendido=true)
+
+      then SellShortAtMarket;                         
+
+    end;
+
+  if (SlowStochastic(5)<50) and (MACD(20,10,12)>media(12,MACD(20,10,12))) 
+
+  then PaintBar(clGreen);
+
+  if (SlowStochastic(5)>70) and (MACD(20,10,12)<media(12,MACD(20,10,12))) 
+
+  then PaintBar(clRed);
+
+end;
